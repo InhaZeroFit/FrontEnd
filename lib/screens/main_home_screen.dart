@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'account_management_screen.dart';
+import 'package:ma_app_zerofit/screens/marketplace_screen.dart';
 
 class MainHomeScreen extends StatelessWidget {
   const MainHomeScreen({super.key});
@@ -106,7 +107,13 @@ class MainHomeScreen extends StatelessWidget {
                 height: 50,
                 margin: const EdgeInsets.symmetric(vertical: 10),
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const MarketplaceScreen()),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     shape: RoundedRectangleBorder(

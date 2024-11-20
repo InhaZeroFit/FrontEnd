@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/onboarding_screen.dart';
+import 'package:ma_app_zerofit/screens/onboarding_screen.dart';
 
 void main() {
   runApp(const MyApp());
