@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'find_password_screen.dart';
 import 'main_home_screen.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,6 +16,55 @@ class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool isChecked = false;
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  String _responseMessage = '';
+
+  Future<void> _login() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      setState(() {
+        _responseMessage = '이메일과 비밀번호를 입력해주세요!';
+      });
+      return;
+    }
+
+    // Node.js 서버로 로그인 요청
+    final response = await _sendLoginRequest(email, password);
+
+    _passwordController.clear();
+
+    setState(() {
+      _responseMessage = response;
+    });
+  }
+
+  Future<String> _sendLoginRequest(String email, String password) async {
+    final url = Uri.parse('http://localhost:8005/auth/login');
+    final headers = {'Content-Type': 'application/json'};
+    final body = {'email': email, 'password': password};
+
+    try {
+      final response = await http.post(url, headers: headers, body: jsonEncode(body));
+      if (response.statusCode == 200) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MainHomeScreen(), // 이메일 전달
+          ),
+        );
+
+        return 'Login successful!';
+      } else {
+        final responseBody = jsonDecode(response.body);
+        return 'Error: ${responseBody['message']}';
+      }
+    } catch (e) {
+      return 'Error: Could not connect to server';
+    }
+  }
 
   @override
   void initState() {
@@ -91,6 +142,7 @@ class _LoginScreenState extends State<LoginScreen>
               children: [
                 const Text('이메일 주소', style: TextStyle(color: Colors.grey)),
                 TextField(
+                  controller: _emailController,
                   decoration: InputDecoration(
                     hintText: 'Dosamarvis@gmail.com',
                     border: OutlineInputBorder(
@@ -101,6 +153,7 @@ class _LoginScreenState extends State<LoginScreen>
                 const SizedBox(height: 20),
                 const Text('비밀번호', style: TextStyle(color: Colors.grey)),
                 TextField(
+                  controller: _passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
                     hintText: '••••••••',
@@ -129,15 +182,7 @@ class _LoginScreenState extends State<LoginScreen>
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: () {
-                      // 로그인 버튼 클릭 시 MainHomeScreen으로 이동
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MainHomeScreen(),
-                        ),
-                      );
-                    },
+                    onPressed: _login,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFFB1B1),
                       shape: RoundedRectangleBorder(
@@ -148,6 +193,12 @@ class _LoginScreenState extends State<LoginScreen>
                   ),
                 ),
                 const SizedBox(height: 20),
+                Center(
+                  child: Text(
+                    _responseMessage,
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
               ],
             ),
           ),
